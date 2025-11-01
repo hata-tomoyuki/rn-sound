@@ -1,5 +1,5 @@
 import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Button, Platform, StyleSheet, View } from 'react-native';
 
 import { HelloWave } from '@/components/hello-wave';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
@@ -7,7 +7,39 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Link } from 'expo-router';
 
+import { useEffect, useState } from 'react';
+
+import { Audio } from "expo-av";
+
+const testSound = require("@/assets/sounds/bgm.mp3");
+
 export default function HomeScreen() {
+  const [audio, setAudio] = useState<Audio.Sound | null>(null);
+
+  useEffect(() => {
+    // ここでsoundを作成！！
+    const initAudio = async () => {
+      try {
+        const { sound } = await Audio.Sound.createAsync(testSound);
+        setAudio(sound);
+      } catch (error) {
+        console.error("音声の初期化中にエラーが発生しました:", error);
+      }
+    };
+    initAudio();
+    return () => {
+      // クリーンアップ関数で画面を離れる時はunloadAsyncでaudioをunloadします！
+      audio?.unloadAsync();
+    };
+  }, []);
+
+  async function playAudio() {
+    await audio?.playAsync();
+  }
+  async function stopAudio() {
+    await audio?.stopAsync();
+  }
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -21,6 +53,10 @@ export default function HomeScreen() {
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
       </ThemedView>
+      <View>
+        <Button title="Play Audio" onPress={playAudio} />
+        <Button title="Stop Audio" onPress={stopAudio} />
+      </View>
       <ThemedView style={styles.stepContainer}>
         <ThemedText type="subtitle">Step 1: Try it</ThemedText>
         <ThemedText>
