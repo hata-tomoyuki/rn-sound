@@ -8,6 +8,7 @@ const bgmSource = require('@/assets/sounds/bgm.mp3')
 const spinSoundSource = require('@/assets/sounds/bgm2.mp3')
 const parrotImage = require('@/assets/images/parrot/slowparrot.gif')
 const fastParrotImage = require('@/assets/images/parrot/fastparrot.gif')
+const sfxSource = require('@/assets/sounds/sound.mp3');
 
 // フェードの設定
 const FADE_DURATION = 500 // フェード時間（ミリ秒）
@@ -17,7 +18,10 @@ const FADE_INTERVAL = FADE_DURATION / FADE_STEPS // 各ステップの間隔
 export const Roulette = () => {
   const player = useAudioPlayer(bgmSource)
   const spinPlayer = useAudioPlayer(spinSoundSource)
+  const sfx = useAudioPlayer(sfxSource);
+
   const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   const [image, setImage] = useState(parrotImage)
   const [isSpinning, setIsSpinning] = useState(false)
   const [result, setResult] = useState<string | null>(null)
@@ -81,6 +85,8 @@ export const Roulette = () => {
 
     // スピン用サウンドを最初から再生（ループ無効）
     try {
+      sfx.seekTo(0);
+      sfx.play();
       spinPlayer.loop = false
       fadeOut()
       spinPlayer.seekTo(0)
@@ -113,7 +119,7 @@ export const Roulette = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>ルーレット</Text>
+      <Text style={styles.title}>おうむルーレット</Text>
 
       <View style={styles.imageContainer}>
         <Image
