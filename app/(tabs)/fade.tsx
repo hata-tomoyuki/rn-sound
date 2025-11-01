@@ -15,6 +15,12 @@ export const Fade = () => {
   const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // フェードイン関数
+  // 目的: 無音(0.0)から通常音量(1.0)まで段階的に音量を上げて、
+  //       “スッと音が入ってくる”ような自然な演出を実現します。
+  // ポイント:
+  // - setIntervalで短い間隔ごとにvolumeを少しずつ増やす
+  // - 既存のフェードタイマーが動いていたら必ず止める（二重進行防止）
+  // - 最後にタイマーを必ず解放する
   const fadeIn = useCallback(() => {
     // 既存のフェード処理をクリア
     if (fadeIntervalRef.current) {
@@ -22,16 +28,20 @@ export const Fade = () => {
     }
 
     // 音量を0から開始
+    // 先にvolumeを0にしてからplay()することで、再生開始の瞬間の「鳴り始めの違和感」を避けます。
     player.volume = 0
     player.play()
 
     let currentStep = 0
     fadeIntervalRef.current = setInterval(() => {
       currentStep++
+      // volumeは0.0〜1.0の範囲。段階数で割って0→1に線形に近づけます。
+      // 念のためMath.minで上限1.0を保証します。
       const volume = Math.min(currentStep / FADE_STEPS, 1.0)
       player.volume = volume
 
       if (currentStep >= FADE_STEPS) {
+        // 規定ステップに達したらタイマーを停止し、参照もクリアします。
         if (fadeIntervalRef.current) {
           clearInterval(fadeIntervalRef.current)
           fadeIntervalRef.current = null
@@ -41,6 +51,9 @@ export const Fade = () => {
   }, [player])
 
   // フェードアウト関数
+  // 目的: 現在の音量(想定:1.0)から0.0へ段階的に下げて、
+  //       “自然に音が消えていく”演出を実現します。
+  // onComplete: フェードアウト完了後に実行したい処理（画面遷移や別トラック再生など）を渡せます。
   const fadeOut = useCallback((onComplete?: () => void) => {
     // 既存のフェード処理をクリア
     if (fadeIntervalRef.current) {
@@ -50,15 +63,18 @@ export const Fade = () => {
     let currentStep = FADE_STEPS
     fadeIntervalRef.current = setInterval(() => {
       currentStep--
+      // volumeが0未満にならないように下限0.0を保証します。
       const volume = Math.max(currentStep / FADE_STEPS, 0.0)
       player.volume = volume
 
       if (currentStep <= 0) {
+        // 最終的にpause()して無音状態で停止します。
         if (fadeIntervalRef.current) {
           clearInterval(fadeIntervalRef.current)
           fadeIntervalRef.current = null
         }
         player.pause()
+        // フェードアウト後に続けて行いたい処理があれば呼び出します。
         if (onComplete) {
           onComplete()
         }
@@ -89,7 +105,7 @@ export const Fade = () => {
   )
 
   return (
-    <View>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
       <Text>game</Text>
     </View>
   )

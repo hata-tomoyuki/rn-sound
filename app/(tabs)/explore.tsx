@@ -1,4 +1,6 @@
 import { useAudioPlayer } from 'expo-audio';
+// expo-audio: ワンショットの効果音（SE）を鳴らすのに最適。
+// ここでは「展開時のクリック音」のような短いサウンドを想定します。
 import { Image } from 'expo-image';
 import { Button, Platform, StyleSheet } from 'react-native';
 
@@ -10,14 +12,16 @@ import { Collapsible } from '@/components/ui/collapsible';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Fonts } from '@/constants/theme';
 
+// 効果音アセット。requireでビルドに含めます。
 const sfxSource = require('@/assets/sounds/sound.mp3');
 
 export default function TabTwoScreen() {
+  // 効果音用プレイヤー。再生のたびに先頭へシークしてからplayします。
   const sfx = useAudioPlayer(sfxSource);
   const playSfx = () => {
     try {
-      sfx.seekTo(0);
-      sfx.play();
+      sfx.seekTo(0); // 常に頭出し
+      sfx.play();    // 短く鳴らす
     } catch {}
   };
   return (
